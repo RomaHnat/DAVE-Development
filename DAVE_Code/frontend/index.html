@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAVE Prototype - Document Validation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header class="page-header">
+        <div class="main-container">
+            <div class="header-top">
+                <div class="title-section">
+                    <h1 class="main-title">DAVE Prototype</h1>
+                    <p><small>Documents and Applications Validation Engine</small></p>
+                </div>
+                <div class="user-info">
+                    <small>Logged in as: <a href="#" id="logout-link" class="user-link">test@dave.ie</a></small>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container main-content">
+        
+        <div class="section">
+            <div class="full-width">
+                <div id="status-section" class="centered">
+                    <h4>Application Status</h4>
+                    <span id="status-badge" class="status-warning">
+                        Pending - ID Document Required
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="full-width">
+                <div class="info-card">
+                    <div class="card-title">
+                        <h5>Application Details</h5>
+                    </div>
+                    <div class="card-content">
+                        <div class="two-columns">
+                            <div class="column">
+                                <table class="info-table">
+                                    <tr>
+                                        <td class="label">Case ID:</td>
+                                        <td id="case-id">DAVE-2025-001</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label">Full Name:</td>
+                                        <td id="full-name">John Doe</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label">Student ID:</td>
+                                        <td id="student-id">T00123456</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="column">
+                                <table class="info-table">
+                                    <tr>
+                                        <td class="label">Email:</td>
+                                        <td id="email">john.doe@student.ie</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label">Course:</td>
+                                        <td id="course">Computer Science</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label">Created:</td>
+                                        <td id="created-date">18 November 2025</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="full-width">
+                <div class="info-card">
+                    <div class="card-title">
+                        <h5>Upload ID Document</h5>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-message">
+                            <strong>Required:</strong> Please upload a clear copy of your ID document (JPG, JPEG, PNG, or PDF format, max 6MB)
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="file-input" class="input-label">Select ID Document:</label>
+                            <input type="file" class="file-input" id="file-input" accept="image/jpeg,image/jpg,image/png,application/pdf">
+                            <small class="help-text">Accepted formats: JPG, JPEG, PNG, PDF (max 6MB)</small>
+                        </div>
+
+                        <button id="upload-btn" class="primary-button" disabled>
+                            Upload Document
+                        </button>
+
+                        <div id="upload-status" class="status-message" style="display: none;">
+                            <div class="message-box">
+                                <strong>Status:</strong> <span id="status-text">Ready to upload</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="text-section" style="display: none;">
+            <div class="full-width">
+                <div class="info-card">
+                    <div class="card-title">
+                        <h5>Extracted Text from Document</h5>
+                    </div>
+                    <div class="card-content">
+                        <textarea id="extracted-text" class="text-area" rows="8" readonly></textarea>
+                        <div class="text-info">
+                            <small class="small-text">
+                                Character count: <span id="char-count">0</span> | 
+                                Processing time: <span id="process-time">0</span>s
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="validation-section" style="display: none;">
+            <div class="full-width">
+                <div class="info-card">
+                    <div class="card-title">
+                        <h5>Validation Results</h5>
+                    </div>
+                    <div class="card-content">
+
+                        <div class="info-group">
+                            <h6>Expiry Date:</h6>
+                            <p id="expiry-date" class="large-text">Not detected</p>
+                        </div>
+
+                        <div class="info-group">
+                            <h6>Document Status:</h6>
+                            <div id="doc-status">
+                                <span class="status-badge">Not validated</span>
+                            </div>
+                        </div>
+
+                        <div id="days-info" style="display: none;">
+                            <h6>Details:</h6>
+                            <p id="days-text"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="page-footer">
+        <div class="main-container">
+            <p class="footer-text">
+                <small>&copy; 2025 DAVE Prototype | RomerOS</small>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script src="app.js"></script>
+</body>
+</html>

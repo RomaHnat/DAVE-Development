@@ -1,0 +1,380 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+.page-header {
+    background-color: #0d6efd;
+    color: white;
+    padding-top: 1em;
+    padding-bottom: 1em;
+}
+
+.main-container {
+    max-width: 75em;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.title-section {
+    flex: 1;
+}
+
+.main-title {
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.subtitle {
+    margin-top: 0.5em;
+}
+
+.user-info {
+    text-align: right;
+}
+
+.main-content {
+    padding-top: 2em;
+    padding-bottom: 2em;
+}
+
+.section {
+    margin-bottom: 2em;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.centered {
+    text-align: center;
+}
+
+#status-section {
+    background: white;
+    padding: 1em;
+    border: 1px solid #ddd;
+    border-radius: 0.5em;
+}
+
+#status-badge {
+    font-size: 1.2rem;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    padding-left: 1em;
+    padding-right: 1em;
+    display: inline-block;
+    border-radius: 0.25em;
+}
+
+.status-warning {
+    background-color: #ffc107;
+    color: black;
+}
+
+.info-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 0.5em;
+    margin-bottom: 1em;
+}
+
+.card-title {
+    background-color: #f8f9fa;
+    padding: 1em;
+    border-bottom: 1px solid #ddd;
+}
+
+.card-title h5 {
+    font-size: 1.1rem;
+}
+
+.card-content {
+    padding: 1em;
+}
+
+.two-columns {
+    display: flex;
+    gap: 1em;
+}
+
+.column {
+    flex: 1;
+}
+
+.info-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.info-table td {
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+.label {
+    font-weight: bold;
+    color: #666;
+    width: 9em;
+}
+
+.info-message {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    padding: 1em;
+    border-radius: 0.5em;
+    margin-bottom: 1em;
+}
+
+.form-group {
+    margin-bottom: 1em;
+}
+
+.input-label {
+    display: block;
+    margin-bottom: 0.5em;
+    font-weight: bold;
+}
+
+.file-input {
+    display: block;
+    width: 100%;
+    padding: 0.5em;
+    border: 1px solid #ddd;
+    border-radius: 0.5em;
+    cursor: pointer;
+}
+
+.help-text {
+    display: block;
+    margin-top: 0.5em;
+    color: #666;
+}
+
+.primary-button {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    padding-left: 1.5em;
+    padding-right: 1.5em;
+    border-radius: 0.5em;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.primary-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.status-message {
+    margin-top: 1em;
+}
+
+.message-box {
+    padding: 1em;
+    border: 1px solid #ddd;
+    border-radius: 0.5em;
+    background-color: #f8f9fa;
+}
+
+.success-alert {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.error-alert {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.info-alert {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+.default-alert {
+    background-color: #e2e3e5;
+    border-color: #d6d8db;
+    color: #383d41;
+}
+
+.text-area {
+    width: 100%;
+    padding: 0.5em;
+    border: 1px solid #ddd;
+    border-radius: 0.5em;
+    font-family: monospace;
+    resize: vertical;
+}
+
+.text-info {
+    margin-top: 0.5em;
+}
+
+.small-text {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.info-group {
+    margin-bottom: 1em;
+}
+
+.info-group h6 {
+    margin-bottom: 0.5em;
+}
+
+.large-text {
+    font-size: 1.2rem;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.status-badge {
+    display: inline-block;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    padding-left: 1em;
+    padding-right: 1em;
+    border-radius: 0.25em;
+    background-color: #6c757d;
+    color: white;
+}
+
+.badge-valid {
+    background-color: #28a745;
+}
+
+.badge-expired {
+    background-color: #dc3545;
+}
+
+.badge-pending {
+    background-color: #6c757d;
+}
+
+.normal-text {
+    font-size: 1rem;
+}
+
+.valid-text {
+    color: #28a745;
+}
+
+.expired-text {
+    color: #dc3545;
+}
+
+.page-footer {
+    background-color: #f8f9fa;
+    text-align: center;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    margin-top: 3em;
+}
+
+.footer-text {
+    color: #666;
+}
+
+.login-container {
+    max-width: 30em;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1.5em;
+}
+
+.login-form {
+    background: white;
+    padding-top: 2em;
+    padding-bottom: 2em;
+    padding-left: 2em;
+    padding-right: 2em;
+    border: 1px solid #ddd;
+    border-radius: 0.5em;
+}
+
+.form-title {
+    text-align: center;
+    margin-bottom: 1.5em;
+    color: #333;
+}
+
+.form-input {
+    display: block;
+    width: 100%;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    padding-left: 0.75em;
+    padding-right: 0.75em;
+    border: 1px solid #ddd;
+    border-radius: 0.5em;
+    font-size: 1rem;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #0d6efd;
+}
+
+.login-button {
+    width: 100%;
+    margin-top: 1em;
+}
+
+.login-message {
+    margin-top: 1em;
+    padding-top: 0.75em;
+    padding-bottom: 0.75em;
+    padding-left: 1em;
+    padding-right: 1em;
+    border-radius: 0.5em;
+    text-align: center;
+}
+
+
+.user-link {
+    color: white;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.user-link:hover {
+    color: #e0e0e0;
+}
+
+
+@media (max-width: 48em) {
+    .two-columns {
+        flex-direction: column;
+    }
+    
+    .header-top {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .user-info {
+        text-align: center;
+        margin-top: 0.5em;
+    }
+}
