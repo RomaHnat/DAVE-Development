@@ -1,20 +1,38 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from contextlib import asynccontextmanager
 import os
 import shutil
 from datetime import datetime
 import uuid
 from pathlib import Path
 
-from ocr_processor import extract_text
-from date_validator import find_expiry_date, validate_document
+from backend.database import connect_to_mongo, close_mongo_connection
+from backend.routes import auth, users, admin
+from backend.ocr_processor import extract_text
+from backend.date_validator import find_expiry_date, validate_document
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 UPLOADS_DIR = BASE_DIR / "uploads"
 UPLOADS_DIR.mkdir(exist_ok=True)
 
-app = FastAPI(title="DAVE Prototype API", version="1.0.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Connect to MongoDB
+    await connect_to_mongo()
+    print("Connected to MongoDB")
+    yield
+    # Shutdown: Close MongoDB connection
+    await close_mongo_connection()
+    print("Disconnected from MongoDB")
+
+app = FastAPI(
+    title="DAVE - Documents and Applications Validation Engine",
+    version="1.0.0",
+    description="Full-stack application for document validation and application management",
+    lifespan=lifespan
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,6 +41,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+app.include_router(users.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
 
 class ProcessRequest(BaseModel):
     filename: str
@@ -44,9 +67,11 @@ class ProcessResponse(BaseModel):
 @app.get("/")
 def root():
     return {
-        "message": "DAVE Prototype API",
+        "message": "DAVE - Documents and Applications Validation Engine",
         "version": "1.0.0",
+        "status": "running",
         "endpoints": {
+            "auth": "/api/auth",
             "upload": "POST /api/upload",
             "process": "POST /api/process"
         }
@@ -99,9 +124,10 @@ async def upload_document(file: UploadFile = File(...)):
 @app.post("/api/process", response_model=ProcessResponse)
 async def process_document(request: ProcessRequest):
     
-    #Process document with OCR and validate expiry date
-    #Accepts: filename
-    #Returns: extracted_text, expiry_date, is_valid, days_remaining
+    """Process document with OCR and validate expiry date
+    Parameters: request (ProcessRequest): Request containing the filename
+    Returns: ProcessResponse: Response containing extracted text, expiry date, validity, and days remaining
+    """
     
     file_path = UPLOADS_DIR / request.filename
     if not file_path.exists():

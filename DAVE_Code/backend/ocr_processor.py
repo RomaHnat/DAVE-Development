@@ -66,9 +66,10 @@ def extract_text_from_pdf(pdf_path):
 
 def extract_text_with_confidence(image_path):
 
-    #Extract text with confidence scores (for future enhancement)
-    #Parameters: image_path (str): Path to the image file 
-    #Returns: dict: Dictionary with text and confidence data
+    """Extract text with confidence scores (for future enhancement)
+    Parameters: image_path (str): Path to the image file 
+    Returns: dict: Dictionary with text and confidence data
+    """
     
     try:
         image = Image.open(image_path)
