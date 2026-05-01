@@ -1,8 +1,10 @@
+
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
 from typing import Optional
 from datetime import datetime, timezone
 from bson import ObjectId
 import math
+import re
 
 from backend.auth.permissions import require_admin, require_super_admin
 from backend.schemas.user import (
@@ -11,12 +13,67 @@ from backend.schemas.user import (
     AdminUserDetailResponse,
     RoleChangeRequest,
     AdminActivityLogResponse,
-    ActivityLogListResponse
+    ActivityLogListResponse,
+    AdminActivityLogListResponse,
 )
 from backend.database import db
 from backend.services.audit_service import log_user_action, get_system_activity
+from backend.services.notification_service import create_notification
+from backend.services.application_service import get_all_applications
+from backend.schemas.application import ApplicationListItem, ApplicationListResponse
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
+
+# Admin: List applications — super_admin sees all types; admin is scoped to review_scope
+@router.get("/applications", response_model=ApplicationListResponse)
+async def list_admin_applications(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    status: Optional[str] = Query(None),
+    current_user: dict = Depends(require_admin)
+):
+    role = current_user.get("role")
+    type_id_filter = None
+
+    if role != "super_admin":
+        # Regular admin must have a review_scope
+        review_scope = current_user.get("review_scope")
+        if not review_scope:
+            raise HTTPException(status_code=403, detail="Admin review scope not set.")
+        app_type = await db.application_types.find_one(
+            {"type_name": {"$regex": re.escape(review_scope), "$options": "i"}}
+        )
+        if not app_type:
+            return ApplicationListResponse(applications=[], total=0, page=page, page_size=page_size)
+        type_id_filter = str(app_type["_id"])
+
+    # Fetch applications (all types for super_admin, scoped type for admin)
+    apps, total = await get_all_applications(
+        page=page,
+        page_size=page_size,
+        status_filter=status,
+        type_id_filter=type_id_filter
+    )
+
+    # Batch-resolve application type names
+    type_ids = list({a["application_type_id"] for a in apps})
+    type_docs = await db.application_types.find({"_id": {"$in": type_ids}}).to_list(length=None)
+    type_map = {str(d["_id"]): d["type_name"] for d in type_docs}
+
+    items = [
+        ApplicationListItem(
+            id=str(a["_id"]),
+            case_id=a["case_id"],
+            application_type_id=str(a["application_type_id"]),
+            application_type_name=type_map.get(str(a["application_type_id"])),
+            status=a["status"],
+            is_editable=a.get("is_editable", True),
+            created_at=a["created_at"],
+            updated_at=a["updated_at"],
+            submitted_at=a.get("submitted_at")
+        ) for a in apps
+    ]
+    return ApplicationListResponse(applications=items, total=total, page=page, page_size=page_size)
 
 @router.get("/users", response_model=UserListResponse)
 async def list_users(
@@ -27,10 +84,6 @@ async def list_users(
     search: Optional[str] = Query(None, description="Search by email or name"),
     current_user: dict = Depends(require_admin)
 ):
-    """
-    Get paginated list of all users.
-    Requires: admin or super_admin role
-    """
     # Build query
     query = {}
     
@@ -85,10 +138,6 @@ async def get_user_details(
     user_id: str,
     current_user: dict = Depends(require_admin)
 ):
-    """
-    Get detailed information for a specific user.
-    Requires: admin or super_admin role
-    """
     # Validate ObjectId
     if not ObjectId.is_valid(user_id):
         raise HTTPException(
@@ -154,11 +203,6 @@ async def change_user_role(
     request: Request,
     current_user: dict = Depends(require_super_admin)
 ):
-    """
-    Change a user's role.
-    Requires: super_admin role only
-    Cannot change own role to prevent lockout.
-    """
     # Validate ObjectId
     if not ObjectId.is_valid(user_id):
         raise HTTPException(
@@ -216,7 +260,13 @@ async def change_user_role(
         request=request
     )
     
-    # TODO: Send email notification to user about role change
+    await create_notification(
+        user_id=user["_id"],
+        type="info",
+        title="Role updated",
+        message=f"Your account role has been changed from {old_role} to {new_role}.",
+        link="/profile",
+    )
     
     return {
         "message": f"User role changed from {old_role} to {new_role}",
@@ -230,11 +280,6 @@ async def toggle_user_status(
     request: Request,
     current_user: dict = Depends(require_admin)
 ):
-    """
-    Activate or deactivate a user account.
-    Requires: admin or super_admin role
-    Cannot deactivate own account.
-    """
     # Validate ObjectId
     if not ObjectId.is_valid(user_id):
         raise HTTPException(
@@ -285,7 +330,13 @@ async def toggle_user_status(
         request=request
     )
     
-    # TODO: Send notification to user
+    await create_notification(
+        user_id=user["_id"],
+        type="warning" if not new_status else "info",
+        title="Account status changed",
+        message=f"Your account is now {'active' if new_status else 'inactive'}.",
+        link="/profile",
+    )
     
     status_text = "activated" if new_status else "deactivated"
     return {
@@ -300,12 +351,6 @@ async def delete_user(
     request: Request,
     current_user: dict = Depends(require_super_admin)
 ):
-    """
-    Soft delete a user account.
-    Requires: super_admin role only
-    Cannot delete own account.
-    Cannot delete users with active applications under review.
-    """
     # Validate ObjectId
     if not ObjectId.is_valid(user_id):
         raise HTTPException(
@@ -366,14 +411,20 @@ async def delete_user(
         request=request
     )
     
-    # TODO: Send final notification email to user
+    await create_notification(
+        user_id=user["_id"],
+        type="urgent",
+        title="Account access removed",
+        message="Your account has been deactivated by an administrator.",
+        link="/support",
+    )
     
     return {
         "message": "User account deleted successfully",
         "user_id": user_id
     }
 
-@router.get("/activity-logs", response_model=ActivityLogListResponse)
+@router.get("/activity-logs", response_model=AdminActivityLogListResponse)
 async def get_system_activity_logs(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(50, ge=1, le=100, description="Items per page"),
@@ -382,11 +433,6 @@ async def get_system_activity_logs(
     entity_type: Optional[str] = Query(None, description="Filter by entity type"),
     current_user: dict = Depends(require_admin)
 ):
-    """
-    Get system-wide activity logs.
-    Requires: admin or super_admin role
-    Includes IP address and user agent information.
-    """
     logs, total = await get_system_activity(
         page=page,
         page_size=page_size,
@@ -412,7 +458,7 @@ async def get_system_activity_logs(
         for log in logs
     ]
     
-    return ActivityLogListResponse(
+    return AdminActivityLogListResponse(
         logs=activity_responses,
         total=total,
         page=page,

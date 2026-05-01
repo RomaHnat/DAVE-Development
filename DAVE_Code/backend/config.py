@@ -7,3 +7,9 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "dave_db")
 
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me")
+
+# OpenAI 
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+
+# HuggingFace Inference API
+HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY", "")

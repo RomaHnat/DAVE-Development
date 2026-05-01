@@ -15,6 +15,9 @@ ROLE_PERMISSIONS: Dict[str, List[str]] = {
         "view_own_documents",
         "view_own_notifications",
         "view_own_activity",
+        "manage_own_settings",
+        "manage_own_security",
+        "manage_own_sessions",
     ],
     "admin": [
         # All applicant permissions
@@ -28,6 +31,9 @@ ROLE_PERMISSIONS: Dict[str, List[str]] = {
         "view_own_documents",
         "view_own_notifications",
         "view_own_activity",
+        "manage_own_settings",
+        "manage_own_security",
+        "manage_own_sessions",
         # Admin-specific permissions
         "view_all_users",
         "view_user_details",
@@ -56,6 +62,9 @@ ROLE_PERMISSIONS: Dict[str, List[str]] = {
         "view_own_documents",
         "view_own_notifications",
         "view_own_activity",
+        "manage_own_settings",
+        "manage_own_security",
+        "manage_own_sessions",
         "view_all_users",
         "view_user_details",
         "activate_user",
@@ -80,41 +89,15 @@ ROLE_PERMISSIONS: Dict[str, List[str]] = {
 }
 
 def check_permission(user: dict, permission: str) -> bool:
-    """
-    Check if a user has a specific permission.
-    Args:
-        user: User document from database
-        permission: Permission string to check
-    Returns:
-        True if user has permission, False otherwise
-    """
     user_role = user.get("role", "applicant")
     user_permissions = ROLE_PERMISSIONS.get(user_role, [])
     return permission in user_permissions
 
 def get_user_permissions(user: dict) -> List[str]:
-    """
-    Get all permissions for a user based on their role.
-    Args:
-        user: User document from database
-    Returns:
-        List of permission strings
-    """
     user_role = user.get("role", "applicant")
     return ROLE_PERMISSIONS.get(user_role, [])
 
 def require_role(*allowed_roles: str) -> Callable:
-    """
-    Dependency to check if current user has one of the allowed roles.
-    Args:
-        *allowed_roles: Variable number of role strings
-    Returns:
-        Dependency function
-    Example:
-        @router.get("/admin/users")
-        async def get_users(current_user = Depends(require_role("admin", "super_admin"))):
-            ...
-    """
     async def role_checker(current_user: dict = Depends(get_current_active_user)):
         user_role = current_user.get("role", "applicant")
         if user_role not in allowed_roles:
@@ -127,17 +110,6 @@ def require_role(*allowed_roles: str) -> Callable:
     return role_checker
 
 def require_permission(permission: str) -> Callable:
-    """
-    Dependency to check if current user has a specific permission.
-    Args:
-        permission: Permission string to require
-    Returns:
-        Dependency function
-    Example:
-        @router.get("/applications")
-        async def get_applications(current_user = Depends(require_permission("view_all_applications"))):
-            ...
-    """
     async def permission_checker(current_user: dict = Depends(get_current_active_user)):
         if not check_permission(current_user, permission):
             raise HTTPException(

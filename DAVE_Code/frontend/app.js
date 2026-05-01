@@ -1,271 +1,199 @@
-let uploadedFilename = null;
-let isProcessing = false;
+﻿let cachedTypes = [];
 
-const fileInput = document.getElementById('file-input');
-const uploadBtn = document.getElementById('upload-btn');
-const uploadStatus = document.getElementById('upload-status');
-const statusText = document.getElementById('status-text');
-const textSection = document.getElementById('text-section');
-const extractedText = document.getElementById('extracted-text');
-const charCount = document.getElementById('char-count');
-const processTime = document.getElementById('process-time');
-const validationSection = document.getElementById('validation-section');
-const expiryDate = document.getElementById('expiry-date');
-const docStatus = document.getElementById('doc-status');
-const daysInfo = document.getElementById('days-info');
-const daysText = document.getElementById('days-text');
-const statusBadge = document.getElementById('status-badge');
+document.addEventListener('DOMContentLoaded', async () => {
 
-document.addEventListener('DOMContentLoaded', function() {
+    if (!requireAuth()) return;
 
-    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
-    if (!isLoggedIn) {
-        window.location.href = 'login.html';
+    const user = getUser();
+    // Force redirect admin users to admin.html if they land on index.html
+    if (user?.role === 'admin' || user?.role === 'super_admin') {
+        window.location.replace('admin.html');
         return;
     }
-    
-    const userEmail = sessionStorage.getItem('userEmail');
-    const logoutLink = document.getElementById('logout-link');
-    if (userEmail && logoutLink) {
-        logoutLink.textContent = userEmail;
-    }
-    
-    if (logoutLink) {
-        logoutLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            sessionStorage.removeItem('isLoggedIn');
-            sessionStorage.removeItem('userEmail');
-            window.location.href = 'login.html';
-        });
-    }
+    document.getElementById('header-user-name').textContent = user?.full_name || user?.email || '';
 
-    fileInput.addEventListener('change', handleFileSelect);
-    
-    uploadBtn.addEventListener('click', handleUpload);
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', e => { e.preventDefault(); apiLogout(); });
+
+    // Notification panel toggle
+    document.getElementById('notif-toggle').addEventListener('click', e => { e.preventDefault(); toggleNotifPanel(); });
+    document.getElementById('mark-all-btn').addEventListener('click', markAllRead);
+
+    // New-application modal
+    document.getElementById('new-app-btn').addEventListener('click', openModal);
+    document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+    document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
+    document.getElementById('modal-create-btn').addEventListener('click', createApplication);
+    document.getElementById('type-select').addEventListener('change', onTypeSelected);
+
+    await Promise.all([loadApplications(), loadNotifCount()]);
 });
 
-function handleFileSelect(event) {
-    const file = event.target.files[0];
-    
-    if (!file) {
-        uploadBtn.disabled = true;
-        return;
-    }
-    
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-    if (!validTypes.includes(file.type)) {
-        showUploadStatus('Invalid file type. Please select a JPEG, JPG, PNG, or PDF file.', 'error');
-        uploadBtn.disabled = true;
-        fileInput.value = '';
-        return;
-    }
-    
-    const maxSize = 6 * 1024 * 1024; 
-    if (file.size > maxSize) {
-        showUploadStatus('File too large. Maximum size is 6MB.', 'error');
-        uploadBtn.disabled = true;
-        fileInput.value = '';
-        return;
-    }
-    
-    showUploadStatus(`Selected: ${file.name} (${formatFileSize(file.size)})`, 'info');
-    uploadBtn.disabled = false;
-}
-
-async function handleUpload() {
-    const file = fileInput.files[0];
-    
-    if (!file) {
-        alert('Please select a file first.');
-        return;
-    }
-    
-    clearPreviousResults();
-    
-    uploadBtn.disabled = true;
-    isProcessing = true;
-    
-    showUploadStatus('Uploading document...', 'loading');
-    
+async function loadApplications() {
     try {
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const response = await fetch('http://localhost:8000/api/upload', {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || 'Upload failed');
-        }
-        
-        const data = await response.json();
-        uploadedFilename = data.filename;
-        
-        showUploadStatus('Upload successful! Processing document...', 'success');
-        
-        await processDocument(uploadedFilename);
-        
-    } catch (error) {
-        console.error('Upload error:', error);
-        showUploadStatus('Upload failed. Please try again.', 'error');
-    } finally {
-        if (!uploadedFilename) {
-            uploadBtn.disabled = false;
-            isProcessing = false;
-        }
+        const res = await apiFetch('/api/applications?page_size=50');
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        renderApplications(data.applications || []);
+    } catch {
+        document.getElementById('apps-loading').innerHTML =
+            '<span class="error-alert" style="padding:0.5em">Failed to load applications.</span>';
     }
 }
 
-function showUploadStatus(message, type = 'info') {
-    uploadStatus.style.display = 'block';
-    
-    const messageBox = uploadStatus.querySelector('.message-box');
-    if (messageBox) {
-        messageBox.className = 'message-box';
-        
-        switch(type) {
-            case 'success':
-                messageBox.classList.add('success-alert');
-                break;
-            case 'error':
-                messageBox.classList.add('error-alert');
-                break;
-            case 'loading':
-                messageBox.classList.add('info-alert');
-                break;
-            default:
-                messageBox.classList.add('default-alert');
-        }
+function renderApplications(apps) {
+    document.getElementById('apps-loading').style.display = 'none';
+    if (!apps.length) {
+        document.getElementById('apps-empty').style.display = 'block';
+        return;
     }
-    
-    statusText.textContent = message;
+    const tbody = document.getElementById('apps-tbody');
+    tbody.innerHTML = apps.map(app => `
+        <tr>
+            <td><code>${escapeHtml(app.case_id)}</code></td>
+            <td>${escapeHtml(app.application_type_name || '-') }</td>
+            <td>${statusBadgeHtml(app.status)}</td>
+            <td>${formatDate(app.created_at)}</td>
+            <td>${formatDate(app.updated_at)}</td>
+            <td style="white-space:nowrap">
+                <a href="application.html?id=${escapeHtml(app.id)}"
+                   class="primary-button" style="padding:0.25em 0.75em;font-size:0.82rem;text-decoration:none;display:inline-block">
+                   View
+                </a>
+                ${(app.status === 'draft' || app.status === 'ready') ? `
+                <button onclick="deleteApp('${escapeHtml(app.id)}')"
+                        class="danger-button" style="padding:0.25em 0.75em;font-size:0.82rem;margin-left:0.3em">
+                    Delete
+                </button>` : ''}
+            </td>
+        </tr>`).join('');
+    document.getElementById('apps-table').style.display = 'table';
 }
 
-async function processDocument(filename) {
-    console.log('Processing document:', filename);
-    
-    showUploadStatus('Processing document with OCR...', 'loading');
-    
+async function deleteApp(id) {
+    if (!confirm('Delete this application? This cannot be undone.')) return;
     try {
-        const response = await fetch('http://localhost:8000/api/process', {
+        const res = await apiFetch(`/api/applications/${id}`, { method: 'DELETE' });
+        if (res.ok) await loadApplications();
+        else alert('Could not delete application.');
+    } catch {}
+}
+
+let notifOpen = false;
+
+async function loadNotifCount() {
+    try {
+        const res = await apiFetch('/api/notifications/unread-count');
+        if (!res.ok) return;
+        const { unread_count } = await res.json();
+        const badge = document.getElementById('notif-badge');
+        badge.textContent = unread_count > 9 ? '9+' : unread_count;
+        badge.style.display = unread_count > 0 ? 'inline-block' : 'none';
+    } catch {}
+}
+
+async function toggleNotifPanel() {
+    const panel = document.getElementById('notif-panel');
+    notifOpen = !notifOpen;
+    panel.style.display = notifOpen ? 'block' : 'none';
+    if (notifOpen) await loadNotifications();
+}
+
+async function loadNotifications() {
+    const list = document.getElementById('notif-list');
+    list.innerHTML = '<div style="padding:1em;text-align:center"><span class="spinner-border spinner-border-sm"></span></div>';
+    try {
+        const res = await apiFetch('/api/notifications?page_size=15');
+        if (!res.ok) { list.innerHTML = '<p style="padding:0.8em;color:#666">Could not load.</p>'; return; }
+        const { notifications } = await res.json();
+        if (!notifications?.length) {
+            list.innerHTML = '<p style="padding:0.8em;color:#666">No notifications.</p>';
+            return;
+        }
+        list.innerHTML = notifications.map(n => `
+            <div class="notif-item ${n.is_read ? '' : 'notif-unread'}" data-id="${escapeHtml(n.id)}">
+                <div class="notif-title">${escapeHtml(n.title)}</div>
+                <div class="notif-msg">${escapeHtml(n.message)}</div>
+                <div class="notif-time">${formatDate(n.created_at)}</div>
+            </div>`).join('');
+        list.querySelectorAll('.notif-item').forEach(el =>
+            el.addEventListener('click', () => markOneRead(el.dataset.id, el)));
+    } catch {}
+}
+
+async function markOneRead(id, el) {
+    try { await apiFetch(`/api/notifications/${id}/read`, { method: 'PATCH' }); } catch {}
+    el?.classList.remove('notif-unread');
+    await loadNotifCount();
+}
+
+async function markAllRead() {
+    try { await apiFetch('/api/notifications/read-all', { method: 'POST' }); } catch {}
+    await Promise.all([loadNotifications(), loadNotifCount()]);
+}
+
+async function openModal() {
+    document.getElementById('modal-msg').style.display = 'none';
+    document.getElementById('new-app-modal').style.display = 'flex';
+    if (!cachedTypes.length) await loadTypes();
+}
+
+function closeModal() {
+    document.getElementById('new-app-modal').style.display = 'none';
+}
+
+async function loadTypes() {
+    try {
+        const res = await apiFetch('/api/application-types');
+        if (!res.ok) return;
+        const data = await res.json();
+        const types = (Array.isArray(data) ? data : (data.application_types || []))
+            .filter(t => t.status === 'active');
+        cachedTypes = types;
+        const sel = document.getElementById('type-select');
+        sel.innerHTML = '<option value="">Select a type</option>' +
+            types.map(t => `<option value="${escapeHtml(t.id)}">${escapeHtml(t.type_name)}</option>`).join('');
+    } catch {}
+}
+
+function onTypeSelected() {
+    const id  = document.getElementById('type-select').value;
+    const el  = document.getElementById('type-desc');
+    const t   = cachedTypes.find(x => x.id === id);
+    if (t?.description) { el.textContent = t.description; el.style.display = 'block'; }
+    else                 { el.style.display = 'none'; }
+}
+
+async function createApplication() {
+    const typeId = document.getElementById('type-select').value;
+    const msgEl  = document.getElementById('modal-msg');
+    if (!typeId) {
+        msgEl.textContent = 'Please select an application type.';
+        msgEl.className   = 'login-message error-alert';
+        msgEl.style.display = 'block';
+        return;
+    }
+    try {
+        const res = await apiFetch('/api/applications', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ filename: filename })
+            body: JSON.stringify({ application_type_id: typeId, form_data: {} }),
         });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || 'Processing failed');
+        if (!res.ok) {
+            const err = await res.json();
+            msgEl.textContent   = err.detail || 'Could not create application.';
+            msgEl.className     = 'login-message error-alert';
+            msgEl.style.display = 'block';
+            return;
         }
-        
-        const data = await response.json();
-        displayResults(data);
-        
-    } catch (error) {
-        console.error('Processing error:', error);
-        showUploadStatus('Processing failed. Please try again.', 'error');
-        uploadBtn.disabled = false;
-        isProcessing = false;
-    }
-}
-
-function displayResults(data) {
-    textSection.style.display = 'block';
-    
-    extractedText.value = data.extracted_text || 'No text extracted';
-    
-    charCount.textContent = data.extracted_text ? data.extracted_text.length : 0;
-    
-    processTime.textContent = data.processing_time || '0';
-    
-    if (data.expiry_date) {
-        displayValidationResults(data);
-    }
-    
-    updateStatusBadge(data.is_valid);
-    
-    showUploadStatus('Processing complete!', 'success');
-}
-
-function displayValidationResults(data) {
-    validationSection.style.display = 'block';
-
-    if (data.expiry_date) {
-        expiryDate.textContent = data.expiry_date;
-    } else {
-        expiryDate.textContent = 'Not detected';
-    }
-    
-    docStatus.innerHTML = '';
-    if (data.is_valid === true) {
-        docStatus.innerHTML = '<span class="status-badge badge-valid normal-text">Valid</span>';
-        
-        if (data.days_remaining) {
-            daysInfo.style.display = 'block';
-            daysText.textContent = `Valid for ${data.days_remaining} more days`;
-            daysText.className = 'no-margin valid-text';
+        const app = await res.json();
+        closeModal();
+        window.location.href = `application.html?id=${app.id}`;
+    } catch (e) {
+        if (e.message !== 'Session expired') {
+            msgEl.textContent   = 'Could not connect to server.';
+            msgEl.className     = 'login-message error-alert';
+            msgEl.style.display = 'block';
         }
-    } else if (data.is_valid === false) {
-        docStatus.innerHTML = '<span class="status-badge badge-expired normal-text">Expired</span>';
-
-        if (data.days_expired) {
-            daysInfo.style.display = 'block';
-            daysText.textContent = `Expired ${data.days_expired} days ago`;
-            daysText.className = 'no-margin expired-text';
-        }
-    } else {
-        docStatus.innerHTML = '<span class="status-badge badge-pending normal-text">Unable to validate</span>';
     }
 }
 
-function updateStatusBadge(isValid) {
-    if (isValid === true) {
-        statusBadge.className = 'status-badge badge-valid';
-        statusBadge.textContent = 'Valid';
-    } else if (isValid === false) {
-        statusBadge.className = 'status-badge badge-expired';
-        statusBadge.textContent = 'Expired';
-    } else {
-        statusBadge.className = 'status-warning';
-        statusBadge.textContent = 'Pending - ID Document Required';
-    }
-}
-
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-}
-
-function clearPreviousResults() {
-    textSection.style.display = 'none';
-    validationSection.style.display = 'none';
-    daysInfo.style.display = 'none';
-    
-    extractedText.value = '';
-    charCount.textContent = '0';
-    processTime.textContent = '0';
-    expiryDate.textContent = '';
-    docStatus.innerHTML = '';
-    daysText.textContent = '';
-    
-    statusBadge.className = 'status-warning';
-    statusBadge.textContent = 'Pending - ID Document Required';
-    
-    uploadedFilename = null;
-}
-
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return date.toLocaleDateString('en-IE', options);
-}
-
-console.log('app.js loaded successfully');

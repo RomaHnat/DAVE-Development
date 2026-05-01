@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Optional
 
 class UserRegisterRequest(BaseModel):
-    """Schema for user registration."""
     email: EmailStr
     password: str = Field(..., min_length=8)
     full_name: str = Field(..., min_length=2)
@@ -21,12 +20,10 @@ class UserRegisterRequest(BaseModel):
         return v
 
 class UserLoginRequest(BaseModel):
-    """Schema for user login."""
     email: EmailStr
     password: str
 
 class UserResponse(BaseModel):
-    """Schema for user response."""
     model_config = ConfigDict(
         populate_by_name=True,
         json_encoders={
@@ -45,7 +42,26 @@ class UserResponse(BaseModel):
     last_login: Optional[datetime] = None
 
 class TokenResponse(BaseModel):
-    """Schema for token response."""
     access_token: str
     token_type: str
     user_data: UserResponse
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(..., min_length=8)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
+        if not any(c.isupper() for c in v):
+            raise ValueError("Password must contain at least one uppercase letter")
+        if not any(c.islower() for c in v):
+            raise ValueError("Password must contain at least one lowercase letter")
+        if not any(c.isdigit() for c in v):
+            raise ValueError("Password must contain at least one digit")
+        return v

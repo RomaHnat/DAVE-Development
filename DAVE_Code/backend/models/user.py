@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, Dict, Any
 
 class User(BaseModel):
     model_config = ConfigDict(
@@ -20,3 +20,11 @@ class User(BaseModel):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_login: Optional[datetime] = None
     profile_image: Optional[str] = None
+    notification_preferences: Dict[str, Any] = Field(default_factory=dict)
+    settings: Dict[str, Any] = Field(default_factory=lambda: {
+        "language": "en",
+        "timezone": "UTC",
+        "date_format": "DD/MM/YYYY",
+    })
+    failed_login_attempts: int = 0
+    locked_until: Optional[datetime] = None

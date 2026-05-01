@@ -10,3 +10,24 @@ python-dotenv==1.0.0
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 email-validator==2.1.0
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.23.2
+httpx==0.25.2
+
+# OCR / image processing (Sprint 5)
+opencv-python-headless>=4.13.0
+pymupdf>=1.24.0
+numpy>=2.4.0
+python-dateutil>=2.8.2
+scikit-image>=0.26.0
+
+# NLP / NER (Sprint 5)
+transformers==4.36.2
+torch==2.11.0+cpu  # --index-url https://download.pytorch.org/whl/cpu
+spacy==3.7.2
+en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl
+
+# AI document suggestions
+openai>=1.0.0

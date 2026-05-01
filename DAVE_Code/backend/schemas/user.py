@@ -4,7 +4,6 @@ from datetime import datetime
 import re
 
 class UserUpdateRequest(BaseModel):
-    """Schema for updating user profile"""
     full_name: Optional[str] = Field(None, min_length=2, max_length=100)
     phone: Optional[str] = Field(None, max_length=20)
     
@@ -28,7 +27,6 @@ class UserUpdateRequest(BaseModel):
     )
 
 class UserDetailResponse(BaseModel):
-    """Extended user response with additional details"""
     model_config = ConfigDict(
         populate_by_name=True,
         json_encoders={
@@ -48,7 +46,6 @@ class UserDetailResponse(BaseModel):
     last_login: Optional[datetime] = None
 
 class UserListItemResponse(BaseModel):
-    """Schema for user list item"""
     model_config = ConfigDict(
         populate_by_name=True,
         json_encoders={
@@ -65,7 +62,6 @@ class UserListItemResponse(BaseModel):
     last_login: Optional[datetime] = None
 
 class UserListResponse(BaseModel):
-    """Schema for paginated user list"""
     users: List[UserListItemResponse]
     total: int
     page: int
@@ -73,7 +69,6 @@ class UserListResponse(BaseModel):
     total_pages: int
 
 class AdminUserDetailResponse(BaseModel):
-    """Schema for admin view of user details"""
     model_config = ConfigDict(
         populate_by_name=True,
         json_encoders={
@@ -96,11 +91,9 @@ class AdminUserDetailResponse(BaseModel):
     applications_by_status: Dict[str, int] = {}
 
 class RoleChangeRequest(BaseModel):
-    """Schema for changing user role"""
     role: str = Field(..., pattern="^(applicant|admin|super_admin)$")
 
 class ActivityLogResponse(BaseModel):
-    """Schema for activity log entry"""
     model_config = ConfigDict(
         populate_by_name=True,
         json_encoders={
@@ -116,14 +109,19 @@ class ActivityLogResponse(BaseModel):
     timestamp: datetime
 
 class ActivityLogListResponse(BaseModel):
-    """Schema for paginated activity logs"""
     logs: List[ActivityLogResponse]
     total: int
     page: int
     page_size: int
 
+
+class AdminActivityLogListResponse(BaseModel):
+    logs: List["AdminActivityLogResponse"]
+    total: int
+    page: int
+    page_size: int
+
 class AdminActivityLogResponse(BaseModel):
-    """Schema for admin view of activity logs"""
     model_config = ConfigDict(
         populate_by_name=True,
         json_encoders={

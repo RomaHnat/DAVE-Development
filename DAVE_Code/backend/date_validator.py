@@ -2,10 +2,6 @@ import re
 from datetime import datetime, timedelta
 
 def find_expiry_date(text):
-  
-    """Find expiry date in extracted text using regex patterns
-    Parameters: text (str): Extracted text from OCR
-    Returns: str: Expiry date in DD/MM/YYYY format, or None if not found"""
     
     if not text:
         return None
@@ -47,15 +43,6 @@ def find_expiry_date(text):
     return None
 
 def validate_document(expiry_date_str):
-    
-    """Validate document expiry date against current date
-    Parameters: expiry_date_str (str): Expiry date in DD/MM/YYYY format
-    Returns:
-        dict: {
-            'is_valid': bool,
-            'days_remaining': int (negative if expired),
-            'expiry_date': str
-        }"""
 
     current_date = datetime.now()
     

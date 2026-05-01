@@ -13,15 +13,6 @@ async def log_user_action(
     details: Optional[Dict[str, Any]] = None,
     request: Optional[Request] = None
 ) -> str:
-    """
-    Log a user action to the audit_logs collection.
-        user_id: User performing the action
-        action: Action name (e.g., "login", "profile_updated")
-        entity_type: Type of entity affected (e.g., "user", "application")
-        entity_id: ID of entity affected
-        details: Additional details as dictionary
-        request: FastAPI Request object for IP and user agent
-    """
     ip_address = None
     user_agent = None
     
@@ -49,16 +40,7 @@ async def get_user_activity(
     page_size: int = 20,
     action: Optional[str] = None
 ) -> tuple[list, int]:
-    """
-    Get activity logs for a specific user.
-    Args:
-        user_id: User ID to get activity for
-        page: Page number (1-indexed)
-        page_size: Number of results per page
-        action: Filter by action type (optional)
-    Returns:
-        Tuple of (logs list, total count)
-    """
+
     query = {"user_id": ObjectId(user_id)}
     
     if action:
@@ -81,17 +63,7 @@ async def get_system_activity(
     action: Optional[str] = None,
     entity_type: Optional[str] = None
 ) -> tuple[list, int]:
-    """
-    Get system-wide activity logs (admin function).
-    Args:
-        page: Page number (1-indexed)
-        page_size: Number of results per page
-        user_id: Filter by user ID (optional)
-        action: Filter by action type (optional)
-        entity_type: Filter by entity type (optional)
-    Returns:
-        Tuple of (logs list with user emails, total count)
-    """
+
     query = {}
     
     if user_id:

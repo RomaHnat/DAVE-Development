@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAVE - My Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header class="page-header">
+        <div class="main-container">
+            <div class="header-top">
+                <div class="title-section">
+                    <h1 class="main-title">DAVE</h1>
+                    <p class="subtitle"><small>Documents and Applications Validation Engine</small></p>
+                </div>
+                <div class="user-info">
+                    <span id="header-user-name" style="margin-right:1em"></span>
+                    <a href="index.html" class="header-text-link">Dashboard</a>
+                    <a href="admin.html" id="admin-link" class="header-text-link" style="display:none">Admin Panel</a>
+                    <a href="#" id="logout-btn" class="header-text-link">Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container main-content">
+
+        <div class="section">
+            <h4 style="margin-bottom:1.25em">My Profile</h4>
+
+            <!-- Tab bar -->
+            <ul class="profile-tabs" id="profile-tabs">
+                <li class="profile-tab active" data-tab="tab-info">Personal Info</li>
+                <li class="profile-tab" data-tab="tab-password">Change Password</li>
+                <li class="profile-tab" data-tab="tab-notif">Notification Preferences</li>
+                <li class="profile-tab" data-tab="tab-sessions">Active Sessions</li>
+            </ul>
+
+            <!-- ── Tab: Personal Info ── -->
+            <div id="tab-info" class="tab-panel">
+                <div class="info-card">
+                    <div class="card-title"><h5 style="margin:0">Personal Information</h5></div>
+                    <div class="card-content">
+                        <form id="info-form" novalidate>
+                            <div class="profile-form-grid">
+                                <div class="form-group">
+                                    <label class="input-label" for="p-full-name">Full Name</label>
+                                    <input type="text" id="p-full-name" class="form-input" placeholder="Your full name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="input-label" for="p-email">Email Address</label>
+                                    <input type="email" id="p-email" class="form-input" disabled title="Email cannot be changed">
+                                    <span class="help-text">Email address cannot be changed.</span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="input-label" for="p-phone">Phone Number</label>
+                                    <input type="tel" id="p-phone" class="form-input" placeholder="+353 87 123 4567">
+                                </div>
+                                <div class="form-group">
+                                    <label class="input-label">Account Role</label>
+                                    <input type="text" id="p-role" class="form-input" disabled>
+                                </div>
+                                <div class="form-group">
+                                    <label class="input-label">Member Since</label>
+                                    <input type="text" id="p-created" class="form-input" disabled>
+                                </div>
+                            </div>
+                            <div id="info-msg" class="login-message" style="display:none"></div>
+                            <div style="margin-top:1.25em">
+                                <button type="submit" class="primary-button" id="info-save-btn">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Tab: Change Password ── -->
+            <div id="tab-password" class="tab-panel" style="display:none">
+                <div class="info-card">
+                    <div class="card-title"><h5 style="margin:0">Change Password</h5></div>
+                    <div class="card-content">
+                        <form id="pw-form" novalidate style="max-width:30em">
+                            <div class="form-group">
+                                <label class="input-label" for="pw-current">Current Password</label>
+                                <input type="password" id="pw-current" class="form-input" placeholder="Enter current password" autocomplete="current-password">
+                            </div>
+                            <div class="form-group">
+                                <label class="input-label" for="pw-new">New Password</label>
+                                <input type="password" id="pw-new" class="form-input" placeholder="At least 8 chars, 1 number, 1 uppercase" autocomplete="new-password">
+                                <span class="help-text">Must be at least 8 characters and contain at least one uppercase letter and one number.</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="input-label" for="pw-confirm">Confirm New Password</label>
+                                <input type="password" id="pw-confirm" class="form-input" placeholder="Repeat new password" autocomplete="new-password">
+                            </div>
+                            <div id="pw-msg" class="login-message" style="display:none"></div>
+                            <div style="margin-top:1.25em">
+                                <button type="submit" class="primary-button" id="pw-save-btn">Update Password</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Tab: Notification Preferences ── -->
+            <div id="tab-notif" class="tab-panel" style="display:none">
+                <div class="info-card">
+                    <div class="card-title"><h5 style="margin:0">Notification Preferences</h5></div>
+                    <div class="card-content">
+                        <p class="small-text" style="margin-bottom:1.25em">Choose which events trigger in-app and email notifications.</p>
+                        <div id="notif-prefs-body">
+                            <div style="text-align:center;padding:2em">
+                                <span class="spinner-border spinner-border-sm"></span> Loading…
+                            </div>
+                        </div>
+                        <div id="notif-prefs-msg" class="login-message" style="display:none"></div>
+                        <div style="margin-top:1.25em">
+                            <button class="primary-button" id="notif-save-btn">Save Preferences</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Tab: Active Sessions ── -->
+            <div id="tab-sessions" class="tab-panel" style="display:none">
+                <div class="info-card">
+                    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+                        <h5 style="margin:0">Active Sessions</h5>
+                        <button class="danger-button" id="logout-all-btn">Sign out all devices</button>
+                    </div>
+                    <div class="card-content" style="padding:0">
+                        <div id="sessions-body">
+                            <div style="text-align:center;padding:2em">
+                                <span class="spinner-border spinner-border-sm"></span> Loading…
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer class="page-footer">
+        <p class="footer-text"><small>&copy; 2026 DAVE</small></p>
+    </footer>
+
+    <script src="api.js?v=20260427"></script>
+    <script src="profile.js?v=20260427"></script>
+</body>
+</html>

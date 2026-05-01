@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to DAVE</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .header { background: #1a73e8; padding: 32px 30px; text-align: center; }
+    .header h1 { color: #ffffff; margin: 0; font-size: 26px; letter-spacing: 1px; }
+    .header p  { color: #d2e3fc; margin: 6px 0 0; font-size: 13px; }
+    .body { padding: 32px 30px; }
+    .body p { color: #333333; line-height: 1.7; margin: 0 0 16px; }
+    .body strong { color: #1a73e8; }
+    .badge { display: inline-block; background: #e8f0fe; color: #1a73e8; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; margin-bottom: 20px; }
+    .footer { background: #f4f6f8; padding: 18px 30px; text-align: center; }
+    .footer p { color: #9aa0a6; font-size: 11px; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>DAVE</h1>
+      <p>Documents and Applications Validation Engine</p>
+    </div>
+    <div class="body">
+      <span class="badge">&#10003; Account Created</span>
+      <p>Hello <strong>{{full_name}}</strong>,</p>
+      <p>Your account has been created successfully. You can now log in and start managing your applications and documents with DAVE.</p>
+      <p>If you did not create this account, please contact our support team immediately.</p>
+      <p>Best regards,<br><strong>The DAVE Team</strong></p>
+    </div>
+    <div class="footer">
+      <p>Documents and Applications Validation Engine &copy; 2026. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
